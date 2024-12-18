@@ -16,11 +16,68 @@ const ReportPage: React.FC = () => {
       setLoading(true);
       setError(null);
 
+      //console.log(keycloak.token);
+
       const response = await fetch(`${process.env.REACT_APP_API_URL}/reports`, {
         headers: {
           'Authorization': `Bearer ${keycloak.token}`
         }
       });
+      if (!response.ok) {
+        console.log(response);
+        throw new Error('Failed to call /reports. Error code: ' + response.status);
+      }
+      
+
+      const text = await response.text();
+      setError("Response: " + response.status + " " + text);
+
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message: 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const downloadData = async () => {
+    if (!keycloak?.token) {
+      setError('Not authenticated');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      //console.log(keycloak.token);
+
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/data`, {
+        headers: {
+          'Authorization': `Bearer ${keycloak.token}`
+        }
+      });
+
+      const text = await response.text();
+      setError("Response: " + response.status + " " + text);
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+      
+    }
+  };
+
+  const getInfo = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/info`);
+
+      const text = await response.text();
+      setError("Response: " + response.status + " " + text);
 
       
     } catch (err) {
@@ -52,6 +109,35 @@ const ReportPage: React.FC = () => {
       <div className="p-8 bg-white rounded-lg shadow-md">
         <h1 className="text-2xl font-bold mb-6">Usage Reports</h1>
         
+
+        <button
+          onClick={getInfo}
+          disabled={loading}
+          className={`px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 ${
+            loading ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+        >
+          {loading ? 'Getting info...' : 'Get Info'}
+        </button>
+
+        <br/>
+        <br/>
+
+        <button
+          onClick={downloadData}
+          disabled={loading}
+          className={`px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 ${
+            loading ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+        >
+          {loading ? 'Getting data...' : 'Get Data'}
+        </button>
+
+        <br/>
+        <br/> 
+
+
+
         <button
           onClick={downloadReport}
           disabled={loading}
@@ -61,6 +147,10 @@ const ReportPage: React.FC = () => {
         >
           {loading ? 'Generating Report...' : 'Download Report'}
         </button>
+
+        <br/>
+        <br/>
+        <a href={`${process.env.REACT_APP_KEYCLOAK_URL}/realms/${process.env.REACT_APP_KEYCLOAK_REALM}/protocol/openid-connect/logout`} target="_blank" rel="noreferrer">Logout</a>
 
         {error && (
           <div className="mt-4 p-4 bg-red-100 text-red-700 rounded">
